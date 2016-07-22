@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">GithubSearch</string>
+    <string name="no_internet">Connection error</string>
 </resources>
