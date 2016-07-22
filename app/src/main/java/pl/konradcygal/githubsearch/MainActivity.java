@@ -9,6 +9,7 @@ import android.net.NetworkInfo;
 import android.support.v4.view.MenuItemCompat;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.SearchView;
 import android.view.Menu;
 import android.view.View;
@@ -17,6 +18,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import pl.konradcygal.githubsearch.api.RestClient;
@@ -29,12 +31,18 @@ import timber.log.Timber;
 public class MainActivity extends AppCompatActivity implements Callback<String> {
     ActivityMainBinding binding;
     private RestClient.ApiInterface service;
+    private ArrayList<SearchItem> items;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
         initService();
+        items = new ArrayList<>();
+        ListRecyclerViewAdapter adapter = new ListRecyclerViewAdapter(this, items);
+        binding.list.setAdapter(adapter);
+        binding.list.setLayoutManager(new LinearLayoutManager(this));
+        binding.list.setHasFixedSize(true);
     }
 
     @Override
@@ -51,9 +59,11 @@ public class MainActivity extends AppCompatActivity implements Callback<String> 
 
             public boolean onQueryTextSubmit(String query) {
                 if (!isNetworkAvailable()) {
+                    binding.rvInfo.setVisibility(View.VISIBLE);
                     binding.info.setText(getString(R.string.no_internet));
                     return false;
                 }
+                binding.rvInfo.setVisibility(View.GONE);
                 search(query);
                 return true;
             }
