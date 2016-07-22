@@ -1,14 +1,14 @@
-package pl.konradcygal.githubsearch;
+package pl.konradcygal.githubsearch.models;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class SearchItem {
+public class SearchItemModel {
     private String title;
     private String description;
     private String avatar;
 
-    public SearchItem(JSONObject item) {
+    public SearchItemModel(JSONObject item) {
         try {
             this.title = item.getString("full_name");
             this.description = item.getString("description");

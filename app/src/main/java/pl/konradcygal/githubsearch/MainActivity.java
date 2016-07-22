@@ -12,6 +12,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.SearchView;
 import android.view.Menu;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -22,6 +23,8 @@ import java.util.HashMap;
 
 import pl.konradcygal.githubsearch.api.RestClient;
 import pl.konradcygal.githubsearch.databinding.ActivityMainBinding;
+import pl.konradcygal.githubsearch.models.MessagesViewModel;
+import pl.konradcygal.githubsearch.models.SearchItemModel;
 import retrofit.Call;
 import retrofit.Callback;
 import retrofit.Response;
@@ -30,13 +33,17 @@ import timber.log.Timber;
 public class MainActivity extends AppCompatActivity implements Callback<String> {
     ActivityMainBinding binding;
     private RestClient.ApiInterface service;
-    private ArrayList<SearchItem> items;
+    private ArrayList<SearchItemModel> items;
     private ListRecyclerViewAdapter adapter;
+    private MessagesViewModel viewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
+        viewModel = new MessagesViewModel();
+        binding.setMessage(viewModel);
+        viewModel.setMessage(R.string.welcome);
         initService();
         items = new ArrayList<>();
         adapter = new ListRecyclerViewAdapter(this, items);
@@ -59,15 +66,13 @@ public class MainActivity extends AppCompatActivity implements Callback<String> 
 
             public boolean onQueryTextSubmit(String query) {
                 if (!isNetworkAvailable()) {
-                    binding.list.setVisibility(View.GONE);
-                    binding.rvInfo.setVisibility(View.VISIBLE);
-                    binding.info.setText(getString(R.string.no_internet));
-                    return false;
+                    viewModel.setMessage(R.string.no_internet);
+                    return true;
                 }
+                viewModel.hideProgressWheel(false);
                 items.clear();
                 adapter.notifyDataSetChanged();
-                binding.list.setVisibility(View.VISIBLE);
-                binding.rvInfo.setVisibility(View.GONE);
+                viewModel.setMessage(null);
                 search(query);
                 return true;
             }
@@ -91,7 +96,6 @@ public class MainActivity extends AppCompatActivity implements Callback<String> 
         call.enqueue(this);
     }
 
-
     @Override
     public void onResponse(Response<String> response) {
         if (response.isSuccess()) {
@@ -99,15 +103,15 @@ public class MainActivity extends AppCompatActivity implements Callback<String> 
                 JSONObject data = new JSONObject(response.body());
                 JSONArray resultsArray = data.getJSONArray("items");
                 if (resultsArray.length() == 0) {
-                    binding.list.setVisibility(View.GONE);
-                    binding.rvInfo.setVisibility(View.VISIBLE);
-                    binding.info.setText(getString(R.string.no_results));
+                    viewModel.setMessage(R.string.no_results);
                     return;
                 }
                 for (int i = 0; i < resultsArray.length(); i++) {
-                    items.add(new SearchItem(resultsArray.getJSONObject(i)));
+                    items.add(new SearchItemModel(resultsArray.getJSONObject(i)));
                 }
                 adapter.notifyDataSetChanged();
+                hideKeyboard();
+                viewModel.hideProgressWheel(true);
                 RestClient.destroyApiInterface();
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -130,4 +134,11 @@ public class MainActivity extends AppCompatActivity implements Callback<String> 
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 
+    private void hideKeyboard() {
+        View view = this.getCurrentFocus();
+        if (view != null) {
+            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
+    }
 }

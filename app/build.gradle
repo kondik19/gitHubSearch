@@ -32,4 +32,5 @@ dependencies {
     compile 'com.squareup.okhttp:okhttp:2.4.0'
     compile 'com.jakewharton.timber:timber:4.1.2'
     compile 'com.squareup.picasso:picasso:2.5.2'
+    compile 'com.pnikosis:materialish-progress:1.7'
 }

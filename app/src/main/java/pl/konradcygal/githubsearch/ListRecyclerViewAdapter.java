@@ -8,13 +8,14 @@ import android.view.ViewGroup;
 import java.util.ArrayList;
 
 import pl.konradcygal.githubsearch.databinding.ItemBinding;
+import pl.konradcygal.githubsearch.models.SearchItemModel;
 
 public class ListRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
-    private ArrayList<SearchItem> items;
+    private ArrayList<SearchItemModel> items;
     private LayoutInflater inflater;
 
     public ListRecyclerViewAdapter(Context context,
-                                   ArrayList<SearchItem> items) {
+                                   ArrayList<SearchItemModel> items) {
         this.inflater = LayoutInflater.from(context);
         this.items = items;
     }
@@ -54,7 +55,7 @@ public class ListRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
             return new ViewHolder(binding);
         }
 
-        public void bindTo(SearchItem entry) {
+        public void bindTo(SearchItemModel entry) {
             binding.setResult(entry);
         }
     }
