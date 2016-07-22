@@ -1,6 +1,5 @@
 package pl.konradcygal.githubsearch;
 
-import android.app.Activity;
 import android.app.SearchManager;
 import android.content.Context;
 import android.databinding.DataBindingUtil;
@@ -32,6 +31,7 @@ public class MainActivity extends AppCompatActivity implements Callback<String> 
     ActivityMainBinding binding;
     private RestClient.ApiInterface service;
     private ArrayList<SearchItem> items;
+    private ListRecyclerViewAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,7 +39,7 @@ public class MainActivity extends AppCompatActivity implements Callback<String> 
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
         initService();
         items = new ArrayList<>();
-        ListRecyclerViewAdapter adapter = new ListRecyclerViewAdapter(this, items);
+        adapter = new ListRecyclerViewAdapter(this, items);
         binding.list.setAdapter(adapter);
         binding.list.setLayoutManager(new LinearLayoutManager(this));
         binding.list.setHasFixedSize(true);
@@ -59,10 +59,14 @@ public class MainActivity extends AppCompatActivity implements Callback<String> 
 
             public boolean onQueryTextSubmit(String query) {
                 if (!isNetworkAvailable()) {
+                    binding.list.setVisibility(View.GONE);
                     binding.rvInfo.setVisibility(View.VISIBLE);
                     binding.info.setText(getString(R.string.no_internet));
                     return false;
                 }
+                items.clear();
+                adapter.notifyDataSetChanged();
+                binding.list.setVisibility(View.VISIBLE);
                 binding.rvInfo.setVisibility(View.GONE);
                 search(query);
                 return true;
@@ -91,12 +95,19 @@ public class MainActivity extends AppCompatActivity implements Callback<String> 
     @Override
     public void onResponse(Response<String> response) {
         if (response.isSuccess()) {
-            String result = response.body();
-
-            JSONObject data;
             try {
-                JSONArray dataArray = new JSONArray(result);
-                String requestUrl = response.raw().request().urlString();
+                JSONObject data = new JSONObject(response.body());
+                JSONArray resultsArray = data.getJSONArray("items");
+                if (resultsArray.length() == 0) {
+                    binding.list.setVisibility(View.GONE);
+                    binding.rvInfo.setVisibility(View.VISIBLE);
+                    binding.info.setText(getString(R.string.no_results));
+                    return;
+                }
+                for (int i = 0; i < resultsArray.length(); i++) {
+                    items.add(new SearchItem(resultsArray.getJSONObject(i)));
+                }
+                adapter.notifyDataSetChanged();
                 RestClient.destroyApiInterface();
             } catch (JSONException e) {
                 e.printStackTrace();

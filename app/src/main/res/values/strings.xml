@@ -2,4 +2,5 @@
     <string name="app_name">GithubSearch</string>
     <string name="no_internet">Connection error</string>
     <string name="welcome">Hello! Click on search button</string>
+    <string name="no_results">Sorry, we could not find anything :( Try again!</string>
 </resources>
